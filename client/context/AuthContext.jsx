@@ -67,16 +67,31 @@ export const AuthProvider = ({ children }) => {
   };
 
   const connectSocket = (userData) => {
-    if (!userData || socket?.connected) return;
+    if (!userData) return;
+
+    if (socket) {
+      socket.disconnect();
+    }
 
     const newSocket = io(backendUrl, {
       query: { userId: userData._id },
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     setSocket(newSocket);
 
     newSocket.on("getOnlineUsers", (userIds) => {
       setOnlineUsers(userIds);
+    });
+
+    newSocket.on("disconnect", (reason) => {
+      console.log("⚠️ Socket disconnected:", reason);
+    });
+
+    newSocket.on("connect_error", (err) => {
+      console.error("❌ Socket connection error:", err);
     });
   };
 

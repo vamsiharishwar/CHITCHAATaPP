@@ -12,7 +12,7 @@ const server = http.createServer(app);
 
 // ✅ CORS settings
 app.use(cors({
-  origin: "*", // ⚠️ Consider restricting in production
+  origin: "*", // ⚠️ Restrict in production
   credentials: true,
 }));
 
@@ -21,8 +21,9 @@ app.use(express.json({ limit: "4mb" }));
 
 // ✅ Socket.IO setup
 export const io = new Server(server, {
+  pingTimeout: 60000, // ⬅️ Increased ping timeout
   cors: {
-    origin: "*", // ⚠️ Should be restricted to frontend origin in production
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -32,9 +33,15 @@ export const userSocketMap = {};
 // ✅ WebSocket connection handler
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
-  console.log("✅ User connected:", userId);
 
-  if (userId) userSocketMap[userId] = socket.id;
+  if (!userId) {
+    console.log("⚠️ Missing userId in handshake, disconnecting socket");
+    socket.disconnect(true);
+    return;
+  }
+
+  console.log("✅ User connected:", userId);
+  userSocketMap[userId] = socket.id;
 
   // Broadcast online users
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
@@ -58,7 +65,7 @@ const PORT = process.env.PORT || 5000;
 
 const init = async () => {
   try {
-    await connectDB(); // MongoDB connection
+    await connectDB();
     server.listen(PORT, () =>
       console.log(`✅ Server is running on http://localhost:${PORT}`)
     );

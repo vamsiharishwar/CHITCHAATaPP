@@ -7,50 +7,50 @@ import toast from 'react-hot-toast'
 
 const ChatContainer = () => {
   const {
-  messages,
-  selectedUser,
-  setSelectedUser,
-  sendMessage,
-  getMessages
-} = useContext(ChatContext);
+    messages,
+    selectedUser,
+    setSelectedUser,
+    sendMessage,
+    getMessages
+  } = useContext(ChatContext);
 
-
-  const { authUser, onlineUsers } = useContext(AuthContext)
-  const scrollEnd = useRef()
-  const [input, setInput] = useState('')
+  // ✅ Fix: Use correct name from context
+  const { authUsers, onlineUsers } = useContext(AuthContext);
+  const scrollEnd = useRef();
+  const [input, setInput] = useState('');
 
   const handleSendMessage = async (e) => {
-    e.preventDefault()
-    if (input.trim() === '') return
-    await sendMessage({ text: input.trim() })
-    setInput('')
-  }
+    e.preventDefault();
+    if (input.trim() === '') return;
+    await sendMessage({ text: input.trim() });
+    setInput('');
+  };
 
   const handleSendImage = async (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (!file || !file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
+      toast.error('Please select an image file');
+      return;
     }
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onloadend = async () => {
-      await sendMessage({ image: reader.result })
-      e.target.value = ''
-    }
-    reader.readAsDataURL(file)
-  }
+      await sendMessage({ image: reader.result });
+      e.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
-    if (selectedUser) {
-      getMessages(selectedUser._id)
+    if (selectedUser?._id) {
+      getMessages(selectedUser._id);
     }
-  }, [selectedUser])
+  }, [selectedUser]);
 
   useEffect(() => {
     if (scrollEnd.current && messages) {
-      scrollEnd.current.scrollIntoView({ behavior: 'smooth' })
+      scrollEnd.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages])
+  }, [messages]);
 
   return selectedUser ? (
     <div className='h-full overflow-y-auto relative backdrop-blur-lg'>
@@ -64,7 +64,7 @@ const ChatContainer = () => {
         />
         <p className='flex-1 text-lg text-white flex items-center gap-2'>
           {selectedUser.fullName}
-          {onlineUsers.includes(selectedUser._id) && (
+          {onlineUsers.includes(selectedUser?._id) && (
             <span className='w-2 h-2 rounded-full bg-green-500'></span>
           )}
         </p>
@@ -84,7 +84,7 @@ const ChatContainer = () => {
       {/* Chat body */}
       <div className='flex flex-col h-[calc(100%-200px)] overflow-y-scroll p-3 pb-6'>
         {messages.map((msg, index) => {
-          const isMyMessage = msg.senderId === authUser._id
+          const isMyMessage = msg.senderId === authUsers?._id;
           return (
             <div
               key={index}
@@ -109,7 +109,7 @@ const ChatContainer = () => {
                 <img
                   src={
                     isMyMessage
-                      ? authUser?.profilePic || assets.avatar_icon
+                      ? authUsers?.profilePic || assets.avatar_icon
                       : selectedUser?.profilePic || assets.avatar_icon
                   }
                   className='w-7 rounded-full'
@@ -118,7 +118,7 @@ const ChatContainer = () => {
                 <p className='text-gray-500'>{formatMessageTime(msg.createdAt)}</p>
               </div>
             </div>
-          )
+          );
         })}
         <div ref={scrollEnd}></div>
       </div>
@@ -152,7 +152,7 @@ const ChatContainer = () => {
       <img src={assets.logo_icon} className='w-16' alt="Chat Logo" />
       <p className='text-lg font-medium text-white'>Chat anytime, anywhere</p>
     </div>
-  )
-}
+  );
+};
 
-export default ChatContainer
+export default ChatContainer;
